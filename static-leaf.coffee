@@ -79,34 +79,45 @@ module.exports =
   
   Float: class extends Leaf
     
+    make: (pointer, value) ->
+      return new dynamic.Float pointer, value
+      
     parse: (source, parseStack) =>
+      pattern = "-?[0-9]*(\\.[0-9]*)?((e|E)-?[0-9]*)?"
+      return doMatch source, pattern, "", @, @make
+
 
 # FixedBCD
   
   FixedBCD: class extends Leaf
     
+    make: (pointer, value) ->
+      return new dynamic.FixedBCD pointer, value
+      
     parse: (source, parseStack) =>
+      return doMatch source, "-?[0-9]*(\\.[0-9]*)?", "", @, @make
+
 
 # StringType
   
   StringType: class extends Leaf
     
     parse: (source, parseStack) =>
-      return dynamic.StringType @, source.stringType
+      return dynamic.SingleQuotes @, source.stringType
 
 # SingleQuotes
   
   SingleQuotes: class extends Leaf
     
     parse: (source, parseStack) =>
-      return dynamic.SingleQuotes @, source.SingleQuotes
+      return dynamic.SingleQuotes @, source.singleQuotes
 
 # DoubleQuotes
   
   DoubleQuotes: class extends Leaf
     
     parse: (source, parseStack) =>
-      return dynamic.DoubleQuotes @, source.DoubleQuotes
+      return dynamic.DoubleQuotes @, source.doubleQuotes
 
 # Symbol
   
