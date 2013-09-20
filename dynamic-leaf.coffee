@@ -2,19 +2,22 @@
 #   Leaf dynamic classes
 #
 
-class Leaf
-  constructor: (@pointer) ->
+Dynamic = require "./dynamic"
 
+class Leaf extends Dynamic
+  constructor: (linkid, pointer) ->
+    super linkid, pointer
+    
   isComplete: ->
     return true
  
 class Value extends Leaf
-  constructor: (pointer, @value) ->
-    super pointer
+  constructor: (linkid, pointer, @value) ->
+    super linkid, pointer
     
 class Numeric extends Value
-  constructor: (pointer, value) ->
-    super pointer, +value
+  constructor: (linkid, pointer, value) ->
+    super linkid, pointer, +value
  
 module.exports =
   Constant: class extends Leaf

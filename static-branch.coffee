@@ -2,18 +2,20 @@
 #   static branching classes for parsing and editing
 #
 
-dy = require "./dynamic"
+dy = require "./dynamic-all"
+linkable = require "./linkable"
 
 #
 #  Base classes
 #
  
-Monadic = class
-  constructor: (@argument) ->
-  
-Dyadic = class
-  constructor: (@left, @right) ->
-
+Monadic = class extends linkable.Linkable
+  constructor: (linkid, @argument) ->
+    super linkid
+    
+Dyadic = class extends linkable.Linkable
+  constructor: (linkid, @left, @right) ->
+    super linkid
 #
 #  utility classes
 #
@@ -37,27 +39,40 @@ module.exports =
 #
   Parentheses: class extends Monadic
  
-  parse: (source, parseStack) =>
-    return new dy.Parentheses @argument.parse(source, parseStack)
+  parse: (next, source, parseStack) =>
+    descendent = @argument.parse next, source, parseStack
+    
+    if descendent
+      result = new dy.Parentheses next.next(), @, descendent
+    else
+      result = null
      
 #
 #   Define a repetition in the parse tree
 #
   Repeat: class extends Monadic
 
-    parse: (source, parseStack) =>
-      return new dy.Repeat @argument.parse(source, parseStack)
-    
+    parse: (next, source, parseStack) =>
+      result = new dy.Repeat next.next(), @
+      
+      while item = @argument.parse next, source, parseStack
+        result.add item
+        
+      return result
 #
 #  define a concatenation in the parse tree
 #
   AndJoin: class extends Dyadic
   
-    parse: (source, parseStack) =>
-      leftParse = @left.parse source, parseStack
-      rightParse = @right.parse source, parseStack
-      return new dy.AndJoin leftParse, rightParse
- 
+    parse: (next, source, parseStack) =>
+      leftParse = @left.parse next, source, parseStack
+      rightParse = @right.parse next, source, parseStack
+      if leftParse && rightParse
+        result = new dy.AndJoin next.next(), @, leftParse, rightParse
+      else
+        result = null
+        
+      return result
 #
 #  define a choice point in the parse tree
 #
@@ -75,20 +90,25 @@ module.exports =
 
 #  parsing function
     
-    parse: (source, parseStack) =>
+    parse: (next, source, parseStack) =>
       source.save
       parseStack.push new ParseSave
       
-      result = @left.parse source, parseStack
+      descendent = @left.parse next, source, parseStack
       
-      if result
-        commit source, parseStack
-        
-      else
+      if ! descendent
         source.restore
         parseStack.pop().restore
            
-        result = @right.parse source, parseStack
+        descendent = @right.parse next, source, parseStack
           
+      if descendent
+        commit source, parseStack
+        result = new dy.OrJoin next.next(), @, descendent
+      else
+        source.restore
+        parseStack.pop().restore
+        result = null
+        
       return result
       

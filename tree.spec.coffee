@@ -5,44 +5,46 @@
 should = require("chai").should()
 
 sp = require "../bin/static-parse"
+linkable = require "../bin/linkable"
+next = new linkable.Next 0
 
 describe "Test tree construction", ->
-
-  u = new sp.Unsigned
-  i = new sp.Integer
-  f = new sp.Fixed
-  l = new sp.Float
-  b = new sp.FixedBCD
-  s = new sp.StringType
-  d = new sp.DoubleQuotes
-  q = new sp.SingleQuotes
-  y = new sp.Symbol
-  m = new sp.Match "[a-z]"
-  p = new sp.OptionalWhite
-  r = new sp.RequiredWhite
-  c = new sp.Constant "foo"
   
-  pr = new sp.Parentheses u
+  u = new sp.Unsigned next.next()
+  i = new sp.Integer next.next()
+  f = new sp.Fixed next.next()
+  l = new sp.Float next.next()
+  b = new sp.FixedBCD next.next()
+  s = new sp.StringType next.next()
+  d = new sp.DoubleQuotes next.next()
+  q = new sp.SingleQuotes next.next()
+  y = new sp.Symbol next.next()
+  m = new sp.Match next.next(), "[a-z]"
+  p = new sp.OptionalWhite next.next()
+  r = new sp.RequiredWhite next.next()
+  c = new sp.Constant next.next(), "foo"
   
-  rp = new sp.Repeat i
+  pr = new sp.Parentheses next.next(), u
   
-  o1 = new sp.OrJoin pr, rp
-  o2 = new sp.OrJoin f, l
-  o3 = new sp.OrJoin b, s
-  o4 = new sp.OrJoin d, q
-  o5 = new sp.OrJoin y, m
-  o6 = new sp.OrJoin p, r
+  rp = new sp.Repeat next.next(), i
   
-  a1 = new sp.AndJoin c, o1
-  a2 = new sp.AndJoin o2, o3
-  a3 = new sp.AndJoin o4, o5
-  a4 = new sp.AndJoin o6, a1
+  o1 = new sp.OrJoin next.next(), pr, rp
+  o2 = new sp.OrJoin next.next(), f, l
+  o3 = new sp.OrJoin next.next(), b, s
+  o4 = new sp.OrJoin next.next(), d, q
+  o5 = new sp.OrJoin next.next(), y, m
+  o6 = new sp.OrJoin next.next(), p, r
   
-  a5 = new sp.AndJoin a1, a2
-  a6 = new sp.AndJoin a3, a4
+  a1 = new sp.AndJoin next.next(), c, o1
+  a2 = new sp.AndJoin next.next(), o2, o3
+  a3 = new sp.AndJoin next.next(), o4, o5
+  a4 = new sp.AndJoin next.next(), o6, a1
+  
+  a5 = new sp.AndJoin next.next(), a1, a2
+  a6 = new sp.AndJoin next.next(), a3, a4
  
-  root = new sp.AndJoin a5, a6
-
+  root = new sp.AndJoin next.next(), a5, a6
+  
   it "root is AndJoin", ->
     root.should.be.an.instanceof sp.AndJoin
 

@@ -191,5 +191,108 @@ describe "Testing source object", ->
       
       it "column should not move", ->
         column.should.equal 1
+       
+  describe "find a newline terminated string", ->
+    source = new Source "foo bar\nhoo foo\nthe end"
+    first = source.toEOL()
+    second = source.toEOL()
+    skip = source.next "\n"
+    third = source.toEOL()
+    skip = source.next "\n"
+    fourth = source.toEOL()
+    
+    it "first should match" , ->
+      first.should.equal "foo bar"
+    
+    it "second should be empty", ->
+      second.should.equal ""
+      
+    it "third should match", ->
+      third.should.equal "hoo foo"
+      
+    it "fourth should match", ->
+      fourth.should.equal "the end"
+      
+  describe "parse double quotes", ->
+    source = new Source '"foo\\\""'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "foo\""
+      
+  describe "parse double quotes with escapes", ->
+    source = new Source '"\\b\\t\\n\\t\\r\\v"'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "\b\t\n\t\r\v"
+
+  describe "parse double quotes with octal escape 304", ->
+    source = new Source '"\\304 "'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "\xc4 "
+
+  describe "parse double quotes with octal escape 377", ->
+    source = new Source '"\\377 "'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "\xff "
+
+  describe "parse double quotes with octal escapes 77", ->
+    source = new Source '"\\77 "'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "\x3f "
+
+  describe "parse double quotes with octal escape 7", ->
+    source = new Source '"\\7"'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "\x07"
+
+  describe "parse double quotes with hex escapes", ->
+    source = new Source '"\\xe8\\xE8\\x8"'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "\xe8\xe8\x08"
+
+  describe "parse double quotes with unicode escapes", ->
+    source = new Source '"\\ue800\\uE80\\uE8\\u8"'
+    first = source.doubleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "\ue800\u0e80\u00e8\u0008"
+
+  describe "fail double quotes", ->
+    source = new Source "'foo'"
+    first = source.doubleQuotes()
+    
+    it "first should fail", ->
+      should.equal first, null
+
+  describe "parse single quotes", ->
+    source = new Source "'foo'"
+    first = source.singleQuotes()
+    
+    it "first should match", ->
+      first.should.equal "foo"
+
+###
+  describe "quote parse errors", ->
+    describe "mismatched quotes", ->
+      source = new Source "'foo\n"
+      should.throw source.singleQuotes(), Error
+
+  describe "quote parse errors", ->
+    describe "mismatched quotes", ->
+      source = new Source "'foo"
+      should.throw source.singleQuotes(), Error
+###
 
 

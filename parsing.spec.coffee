@@ -6,13 +6,19 @@ should = require("chai").should()
 
 sp = require "../bin/static-parse"
 Source = require "../bin/source"
+linkable = require "../bin/linkable"
+
+next = new linkable.Next 0
+dyNext = new linkable.Next 0
+parseStack = []
 
 describe "Test parsing classes", ->
   describe "Test Constant", ->
     source = new Source "foobar"
-    parser = new sp.Constant "foo"
-    first = parser.parse source
-    second = parser.parse source
+    parser = new sp.Constant next.next(), "foo"
+    
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -25,9 +31,9 @@ describe "Test parsing classes", ->
       
   describe "Test Unsigned", ->
     source = new Source "123bar-345"
-    parser = new sp.Unsigned
-    first = parser.parse source
-    second = parser.parse source
+    parser = new sp.Unsigned next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -43,12 +49,12 @@ describe "Test parsing classes", ->
       
   describe "Test Integer", ->
     source = new Source "123bar-345"
-    parser = new sp.Integer
-    first = parser.parse source
-    second = parser.parse source
-    other = new sp.Constant "bar"
-    other.parse source
-    third = parser.parse source
+    parser = new sp.Integer next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    other = new sp.Constant next.next(), "bar"
+    other.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -67,14 +73,14 @@ describe "Test parsing classes", ->
           
   describe "Test Fixed", ->
     source = new Source "123.34bar-345.bar567"
-    parser = new sp.Fixed
-    first = parser.parse source
-    second = parser.parse source
-    other = new sp.Constant "bar"
-    other.parse source
-    third = parser.parse source
-    other.parse source
-    fourth = parser.parse source
+    parser = new sp.Fixed next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    other = new sp.Constant next.next(), "bar"
+    other.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack
+    fourth = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -96,14 +102,14 @@ describe "Test parsing classes", ->
       
   describe "Test FixedBCD", ->
     source = new Source "123.34bar-345.bar567"
-    parser = new sp.FixedBCD
-    first = parser.parse source
-    second = parser.parse source
-    other = new sp.Constant "bar"
-    other.parse source
-    third = parser.parse source
-    other.parse source
-    fourth = parser.parse source
+    parser = new sp.FixedBCD next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    other = new sp.Constant next.next(), "bar"
+    other.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack
+    fourth = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -125,16 +131,16 @@ describe "Test parsing classes", ->
       
   describe "Test Float", ->
     source = new Source "123.34e2b-345.b567b7.8E-2"
-    parser = new sp.Float
-    first = parser.parse source
-    second = parser.parse source
-    other = new sp.Constant "b"
-    other.parse source
-    third = parser.parse source
-    other.parse source
-    fourth = parser.parse source
-    other.parse source
-    fifth = parser.parse source
+    parser = new sp.Float next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    other = new sp.Constant next.next(), "b"
+    other.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack
+    fourth = parser.parse dyNext, source, parseStack
+    other.parse dyNext, source, parseStack
+    fifth = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
       first.isComplete().should.be.true
@@ -157,4 +163,259 @@ describe "Test parsing classes", ->
     it "capital E negative exponent", ->
       fifth.value.should.equal 0.078
 
+  describe "Test Match", ->
+    source = new Source "foobar"
+    parser = new sp.Match next.next(), "f[a-z]o"
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+
+    it "matched", ->
+      first.value.should.equal "foo"
+      
+    it "mismatch", ->
+      should.equal second, null
+
+  describe "Test newline terminated string", ->
+    source = new Source "foobar\nbarfoo"
+    parser = new sp.StringType next.next()
+    skip = new sp.Constant  next.next(),"\n"
+    first = parser.parse dyNext, source, parseStack
+    skip.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+
+    it "matched", ->
+      first.value.should.equal "foobar"
+      
+    it "mismatch", ->
+      second.value.should.equal "barfoo"
+
+  describe "Test single quotes", ->
+    source = new Source "'foobar'a"
+    parser = new sp.SingleQuotes next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+
+    it "matched", ->
+      first.value.should.equal "foobar"
+
+    it "mismatch", ->
+      should.equal second, null
+
+  describe "Test double quotes", ->
+    source = new Source '"foobar"a'
+    parser = new sp.DoubleQuotes next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+
+    it "matched", ->
+      first.value.should.equal "foobar"
+
+    it "mismatch", ->
+      should.equal second, null
+
+  describe "Test optional white", ->
+    source = new Source 'f \v\t\r\na'
+    parser = new sp.OptionalWhite next.next(), "s"
+    first = parser.parse dyNext, source, parseStack
+    skip = new sp.Constant next.next(), "f"
+    skipped = skip.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    match = new sp.Constant next.next(), "a"
+    matched = match.parse dyNext, source, parseStack
+        
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+
+    it "skipped should be complete", ->
+      skipped.isComplete().should.be.true
+
+    it "second should be complete", ->
+      second.isComplete().should.be.true
+      
+    it "second should point at the parser", ->
+      second.pointer.should.equal parser
+
+    it "matched should be complete", ->
+      matched.isComplete().should.be.true
+
+  describe "Test required white", ->
+    source = new Source ' f\nb'
+    parser = new sp.RequiredWhite  next.next(), 'n'
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    skip = new sp.Constant next.next(), "f"
+    skipped = skip.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    skip2 = new sp.Constant next.next(), "b"
+    skipped2 = skip2.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+
+    it "mismatch", ->
+      should.equal second, null
+
+    it "skipped should be complete", ->
+      skipped.isComplete().should.be.true
+      
+    it "third should be complete", ->
+      third.isComplete().should.be.true
+
+    it "skipped2 should be complete", ->
+      skipped2.isComplete().should.be.true
+
+  describe "Test symbol", ->
+    source = new Source 'foobar_42a _FB22 98'
+    parser = new sp.Symbol next.next()
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    skip = new sp.RequiredWhite next.next(), 's'
+    skip1 = skip.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    skip2 = skip.parse dyNext, source, parseStack
+    fourth = parser.parse dyNext, source, parseStack
+        
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+
+    it "matched opening alpha", ->
+      first.value.should.equal "foobar_42a"
+
+    it "blank mismatch", ->
+      should.equal second, null
+
+    it "matched opening _", ->
+      third.value.should.equal "_FB22"
+
+    it "leading digit mismatch", ->
+      should.equal fourth, null
+      
+  describe "Test AndJoin", ->
+    source = new Source "foobarbarfoofoobar"
+    foo = new sp.Constant next.next(), "foo"
+    bar = new sp.Constant next.next(), "bar"
+    parser = new sp.AndJoin next.next(), foo, bar
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    skip = bar.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    fourth = parser.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+    
+    it "first left should point at the left expression", ->
+      first.left.pointer.should.equal foo
+
+    it "first right should point at the right expression", ->
+      first.right.pointer.should.equal bar
+   
+    it "left mismatch should fail", ->
+      should.equal second, null
+      
+    it "right mismatch should fail", ->
+      should.equal third, null
+      
+    it "fourth should be complete", ->
+      fourth.isComplete().should.be.true
+
+  describe "Test OrJoin", ->
+    source = new Source "foobarbarfoofoobar"
+    foo = new sp.Constant next.next(), "foo"
+    bar = new sp.Constant next.next(), "bar"
+    parser = new sp.AndJoin next.next(), foo, bar
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    skip = bar.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    fourth = parser.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+    
+    it "first left should point at the left expression", ->
+      first.left.pointer.should.equal foo
+
+    it "first right should point at the right expression", ->
+      first.right.pointer.should.equal bar
+   
+    it "left mismatch should fail", ->
+      should.equal second, null
+      
+    it "right mismatch should fail", ->
+      should.equal third, null
+      
+    it "fourth should be complete", ->
+      fourth.isComplete().should.be.true
+
+  describe "Test Repeat", ->
+    source = new Source "foobarbarfoofoobar"
+    foo = new sp.Constant next.next(), "foo"
+    bar = new sp.Constant next.next(), "bar"
+    parser = new sp.AndJoin next.next(), foo, bar
+    first = parser.parse dyNext, source, parseStack
+    second = parser.parse dyNext, source, parseStack
+    skip = bar.parse dyNext, source, parseStack
+    third = parser.parse dyNext, source, parseStack
+    fourth = parser.parse dyNext, source, parseStack
+    
+    it "first should be complete", ->
+      first.isComplete().should.be.true
+      
+    it "first should point at the parser", ->
+      first.pointer.should.equal parser
+    
+    it "first left should point at the left expression", ->
+      first.left.pointer.should.equal foo
+
+    it "first right should point at the right expression", ->
+      first.right.pointer.should.equal bar
+   
+    it "left mismatch should fail", ->
+      should.equal second, null
+      
+    it "right mismatch should fail", ->
+      should.equal third, null
+      
+    it "fourth should be complete", ->
+      fourth.isComplete().should.be.true
 
