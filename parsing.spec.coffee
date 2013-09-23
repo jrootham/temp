@@ -332,6 +332,7 @@ describe "Test parsing classes", ->
     second = parser.parse dyNext, source, parseStack
     skip = bar.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
+    skip = foo.parse dyNext, source, parseStack
     fourth = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
@@ -356,14 +357,15 @@ describe "Test parsing classes", ->
       fourth.isComplete().should.be.true
 
   describe "Test OrJoin", ->
-    source = new Source "foobarbarfoofoobar"
+    source = new Source "foobarafoo"
     foo = new sp.Constant next.next(), "foo"
     bar = new sp.Constant next.next(), "bar"
-    parser = new sp.AndJoin next.next(), foo, bar
+    a = new sp.Constant next.next(), "a"
+    parser = new sp.OrJoin next.next(), foo, bar
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    skip = bar.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
+    skip = a.parse dyNext, source, parseStack
     fourth = parser.parse dyNext, source, parseStack
     
     it "first should be complete", ->
@@ -372,26 +374,29 @@ describe "Test parsing classes", ->
     it "first should point at the parser", ->
       first.pointer.should.equal parser
     
-    it "first left should point at the left expression", ->
-      first.left.pointer.should.equal foo
+    it "first argument should point at the foo expression", ->
+      first.argument.pointer.should.equal foo
 
-    it "first right should point at the right expression", ->
-      first.right.pointer.should.equal bar
-   
-    it "left mismatch should fail", ->
-      should.equal second, null
-      
-    it "right mismatch should fail", ->
+    it "second should be complete", ->
+      second.isComplete().should.be.true
+            
+    it "second argument should point at the bar expression", ->
+      second.argument.pointer.should.equal bar
+
+    it "mismatch should fail", ->
       should.equal third, null
       
     it "fourth should be complete", ->
       fourth.isComplete().should.be.true
+
+    it "fourth argument should point at the foo expression", ->
+      fourth.argument.pointer.should.equal foo
 
   describe "Test Repeat", ->
-    source = new Source "foobarbarfoofoobar"
+    source = new Source "foofoobarfoo"
     foo = new sp.Constant next.next(), "foo"
     bar = new sp.Constant next.next(), "bar"
-    parser = new sp.AndJoin next.next(), foo, bar
+    parser = new sp.Repeat next.next(), foo
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     skip = bar.parse dyNext, source, parseStack
@@ -404,18 +409,29 @@ describe "Test parsing classes", ->
     it "first should point at the parser", ->
       first.pointer.should.equal parser
     
-    it "first left should point at the left expression", ->
-      first.left.pointer.should.equal foo
+    it "first list should be 2 long", ->
+      first.list.length.should.equal 2
 
-    it "first right should point at the right expression", ->
-      first.right.pointer.should.equal bar
+    it "first list[0] should be foo", ->
+      first.list[0].pointer.should.equal foo
    
-    it "left mismatch should fail", ->
-      should.equal second, null
-      
-    it "right mismatch should fail", ->
-      should.equal third, null
-      
-    it "fourth should be complete", ->
-      fourth.isComplete().should.be.true
+    it "first list[1] should be foo", ->
+      first.list[1].pointer.should.equal foo
+   
+    it "mismatch should be complete", ->
+      second.isComplete().should.be.true
 
+    it "mismatch should make 0 length list", ->
+      second.list.length.should.equal 0
+      
+    it "third list should be 1 long", ->
+      third.list.length.should.equal 1
+
+    it "third list[0] should be foo", ->
+      third.list[0].pointer.should.equal foo
+      
+    it "mismatch should make 0 length list", ->
+      fourth.list.length.should.equal 0
+      
+      
+      

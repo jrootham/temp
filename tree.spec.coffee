@@ -1,5 +1,5 @@
 #
-#   Build a parse tree and confirm its structure
+#   Build a parsing tree and confirm its structure
 #
 
 should = require("chai").should()
@@ -20,15 +20,13 @@ describe "Test tree construction", ->
   q = new sp.SingleQuotes next.next()
   y = new sp.Symbol next.next()
   m = new sp.Match next.next(), "[a-z]"
-  p = new sp.OptionalWhite next.next()
-  r = new sp.RequiredWhite next.next()
+  p = new sp.OptionalWhite next.next(), "s"
+  r = new sp.RequiredWhite next.next(), "n"
   c = new sp.Constant next.next(), "foo"
   
-  pr = new sp.Parentheses next.next(), u
-  
   rp = new sp.Repeat next.next(), i
-  
-  o1 = new sp.OrJoin next.next(), pr, rp
+
+  o1 = new sp.OrJoin next.next(), u, rp
   o2 = new sp.OrJoin next.next(), f, l
   o3 = new sp.OrJoin next.next(), b, s
   o4 = new sp.OrJoin next.next(), d, q
@@ -75,20 +73,12 @@ describe "Test tree construction", ->
     orjoin = left.right
     orjoin.should.be.an.instanceof sp.OrJoin
   
-  it "with left left right left a Parentheses", ->
+  it "with left left right left an Unsigned", ->
     left = root.left
     left = left.left
     orjoin = left.right
     left = orjoin.left
-    left.should.be.an.instanceof sp.Parentheses
-  
-  it "with left left right left argument an Usigned", ->
-    left = root.left
-    left = left.left
-    orjoin = left.right
-    left = orjoin.left
-    argument = left.argument
-    argument.should.be.an.instanceof sp.Unsigned
+    left.should.be.an.instanceof sp.Unsigned
   
   it "with left left right right a Repeat", ->
     left = root.left
@@ -175,3 +165,18 @@ describe "Test tree construction", ->
     right = left.right
     right.should.be.an.instanceof sp.RequiredWhite
   
+  it "The graph elements should have unique ids", ->
+    unique = ->
+      idList = []
+      elementList = []
+      
+      return (element) ->
+        if elementList.indexOf(element) == -1
+          elementList.push element
+          if idList[element.linkid] != undefined
+            throw new Error "Collision " + element.linkid
+          else
+            idList[element.linkid] = true
+    
+    root.preorder unique()
+    

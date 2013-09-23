@@ -9,5 +9,5 @@ module.exports =
   Next: class
     constructor: (@current) ->
     
-    next: -> @current
+    next: -> @current++
     

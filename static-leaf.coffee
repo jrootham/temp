@@ -13,6 +13,18 @@ class Leaf extends linkable.Linkable
   constructor: (linkid) ->
     super linkid
 
+  preorder: (fn) ->
+    fn @
+
+  inorder: (fn) ->
+    fn @
+
+  postorder: (fn) ->
+    fn @
+
+  displayGraph: (indent)->
+    return indent + @name + "\n"
+    
 #
 #  base class for leaves who store values in the static tree
 #
@@ -37,6 +49,8 @@ module.exports =
 
   Constant: class extends Value
       
+    name: "Constant"
+      
     parse: (next, source, parseStack) =>
       match = source.next(@value)
       if match
@@ -50,6 +64,8 @@ module.exports =
   Match: class extends Leaf
     constructor: (linkid, @pattern, @flags) ->
       super linkid
+      
+    name: "Match"
     
     make:  (next, pointer, value) ->
       new dynamic.Match next.next(), pointer, value
@@ -61,6 +77,8 @@ module.exports =
   
   Unsigned: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "Unsigned"
     
     make: (next, pointer, value) ->
       new dynamic.Unsigned next.next(), pointer, value
@@ -72,6 +90,8 @@ module.exports =
   
   Integer: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "Integer"
     
     make: (next, pointer, value) ->
       new dynamic.Integer next.next(), pointer, value
@@ -83,6 +103,8 @@ module.exports =
   
   Fixed: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "Fixed"
     
     make: (next, pointer, value) ->
       new dynamic.Fixed next.next(), pointer, value
@@ -94,6 +116,8 @@ module.exports =
   
   Float: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "Float"
     
     make: (next, pointer, value) ->
       new dynamic.Float next.next(), pointer, value
@@ -107,6 +131,8 @@ module.exports =
   
   FixedBCD: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "FixedBCD"
     
     make: (next, pointer, value) ->
       new dynamic.FixedBCD next.next(), pointer, value
@@ -119,6 +145,8 @@ module.exports =
   
   StringType: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "StringType"
     
     parse: (next, source, parseStack) =>
       return new dynamic.StringType next.next(), @, source.toEOL()
@@ -127,6 +155,8 @@ module.exports =
   
   SingleQuotes: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "SingleQuotes"
     
     parse: (next, source, parseStack) =>
       matched = source.singleQuotes()
@@ -141,6 +171,8 @@ module.exports =
   
   DoubleQuotes: class extends Leaf
     constructor: (linkid) -> super linkid
+      
+    name: "DoubleQuotes"
     
     parse: (next, source, parseStack) =>
       matched = source.doubleQuotes()
@@ -157,6 +189,8 @@ module.exports =
   Symbol: class extends Leaf
     constructor: (linkid, @pattern = "([A-Z]|[a-z]|_)([A-Z]|[a-z]|[0-9]|_)*") ->
       super linkid
+      
+    name: "Symbol"
     
     make: (next, pointer, value) ->
       new dynamic.Symbol next.next(), pointer, value
@@ -171,6 +205,8 @@ module.exports =
     constructor: (linkid, @whitespace) ->
       super linkid
       
+    name: "OptionalWhite"
+      
     parse: (next, source, parseStack) =>
       match = source.match "\\s*"
       return new dynamic.OptionalWhite next.next(), @
@@ -179,6 +215,8 @@ module.exports =
  
   RequiredWhite: class extends Leaf
     constructor: (linkid, @whitespace) -> super linkid
+      
+    name: "RequiredWhite"
     
     make: (next, pointer, value) ->
       new dynamic.RequiredWhite next.next(), pointer
