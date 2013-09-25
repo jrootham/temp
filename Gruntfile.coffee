@@ -17,7 +17,12 @@ module.exports = (grunt)->
     coffee:
       bin:
         files: [
-          src: ["*.coffee", "!*.spec.coffee", "!Gruntfile.coffee"]
+          src: [
+            "*.coffee",
+            "!*.spec.coffee",
+            "!*.scaffold.coffee",
+            "!Gruntfile.coffee"
+          ]
           dest: "bin/"
           cwd: "."
           expand: true
@@ -33,7 +38,18 @@ module.exports = (grunt)->
           ext: ".spec.js"
         ]
 
+      scaffold:
+        files: [
+          src: ["*.scaffold.coffee"]
+          dest: "test/"
+          cwd: "."
+          expand: true
+          ext: ".scaffold.js"
+        ]
+
     cafemocha:
-      src: "test/*.js"
+      src: "test/*.spec.js"
+      options:
+        reporter: "dot"
   
 

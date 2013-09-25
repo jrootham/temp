@@ -40,15 +40,18 @@ module.exports =
       return result
       
     displayGraph: (indent) ->
-      result =indent + @name + "\n"
+      result = indent + @name + "\n"
       for item in @list
-        result += @item.displayGraph indent + "  "
-
+        if item
+          result += item.displayGraph indent + "  "
+        else
+          result += indent + "  " + "item is null\n"
+    
       return result
 
     preorder: (fn) ->
       fn @
-      for item in list
+      for item in @list
         item.preorder fn
 
 #
@@ -59,7 +62,7 @@ module.exports =
     name: "AndJoin"
 
     isComplete: ->
-      @left.isComplete() && @right.isComplete()
+      return @left.isComplete() && @right.isComplete()
 
     displayGraph: (indent) ->
       result =indent + @name + "\n"
@@ -67,13 +70,12 @@ module.exports =
         result += @left.displayGraph indent + "  "
       else
         result += indent + "  " + "left is null\n"
-      return result
 
-    if @right
-      result += @right.displayGraph indent + "  "
-    else
-      result += indent + "  " + "left is null\n"
-    return result
+      if @right
+        result += @right.displayGraph indent + "  "
+      else
+        result += indent + "  " + "left is null\n"
+      return result
 
     preorder: (fn) ->
       @left.preorder fn

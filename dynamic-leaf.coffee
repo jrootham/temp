@@ -26,16 +26,27 @@ class Leaf extends Dynamic
 class Value extends Leaf
   constructor: (linkid, pointer, @value) ->
     super linkid, pointer
+
+  displayGraph: (indent) ->
+    result = indent + @name + ":" + @value + "\n"
     
 class Numeric extends Value
   constructor: (linkid, pointer, value) ->
     super linkid, pointer, +value
- 
+
+class White extends Leaf
+
+  displayGraph: (indent) ->
+    result = indent + @name + ":" + @pointer.whitespace + "\n"
+    
 module.exports =
   Constant: class extends Leaf
 
     name: "Constant"
   
+    displayGraph: (indent) ->
+      result = indent + @name + ":" + @pointer.value + "\n"
+      
   Unsigned: class extends Numeric
 
     name: "Unsigned"
@@ -76,11 +87,11 @@ module.exports =
 
     name: "Match"
     
-  OptionalWhite: class extends Leaf
+  OptionalWhite: class extends White
 
     name: "OptionalWhite"
     
-  RequiredWhite: class extends Leaf
+  RequiredWhite: class extends White
 
     name: "RequiredWhite"
     
