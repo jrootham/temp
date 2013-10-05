@@ -4,18 +4,18 @@
 
 should = require("chai").should()
 
-sp = require "../bin/static-parse"
+language = require "../bin/language"
 Source = require "../bin/source"
 linkable = require "../bin/linkable"
 
-next = new linkable.Next 0
-dyNext = new linkable.Next 0
+next = new linkable.Next 1
+dyNext = new linkable.Next 1
 parseStack = []
 
 describe "Test parsing classes", ->
   describe "Test Constant", ->
     source = new Source "foobar"
-    parser = new sp.Constant next.next(), "foo"
+    parser = new language.Constant next.next(), "foo"
     
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
@@ -31,7 +31,7 @@ describe "Test parsing classes", ->
       
   describe "Test Unsigned", ->
     source = new Source "123bar-345"
-    parser = new sp.Unsigned next.next()
+    parser = new language.Unsigned next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     
@@ -49,10 +49,10 @@ describe "Test parsing classes", ->
       
   describe "Test Integer", ->
     source = new Source "123bar-345"
-    parser = new sp.Integer next.next()
+    parser = new language.Integer next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    other = new sp.Constant next.next(), "bar"
+    other = new language.Constant next.next(), "bar"
     other.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
     
@@ -73,10 +73,10 @@ describe "Test parsing classes", ->
           
   describe "Test Fixed", ->
     source = new Source "123.34bar-345.bar567"
-    parser = new sp.Fixed next.next()
+    parser = new language.Fixed next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    other = new sp.Constant next.next(), "bar"
+    other = new language.Constant next.next(), "bar"
     other.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
     other.parse dyNext, source, parseStack
@@ -102,10 +102,10 @@ describe "Test parsing classes", ->
       
   describe "Test FixedBCD", ->
     source = new Source "123.34bar-345.bar567"
-    parser = new sp.FixedBCD next.next()
+    parser = new language.FixedBCD next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    other = new sp.Constant next.next(), "bar"
+    other = new language.Constant next.next(), "bar"
     other.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
     other.parse dyNext, source, parseStack
@@ -131,10 +131,10 @@ describe "Test parsing classes", ->
       
   describe "Test Float", ->
     source = new Source "123.34e2b-345.b567b7.8E-2"
-    parser = new sp.Float next.next()
+    parser = new language.Float next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    other = new sp.Constant next.next(), "b"
+    other = new language.Constant next.next(), "b"
     other.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
     other.parse dyNext, source, parseStack
@@ -165,7 +165,7 @@ describe "Test parsing classes", ->
 
   describe "Test Match", ->
     source = new Source "foobar"
-    parser = new sp.Match next.next(), "f[a-z]o"
+    parser = new language.Match next.next(), "f[a-z]o"
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     
@@ -183,8 +183,8 @@ describe "Test parsing classes", ->
 
   describe "Test newline terminated string", ->
     source = new Source "foobar\nbarfoo"
-    parser = new sp.StringType next.next()
-    skip = new sp.Constant  next.next(),"\n"
+    parser = new language.StringType next.next()
+    skip = new language.Constant  next.next(),"\n"
     first = parser.parse dyNext, source, parseStack
     skip.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
@@ -203,7 +203,7 @@ describe "Test parsing classes", ->
 
   describe "Test single quotes", ->
     source = new Source "'foobar'a"
-    parser = new sp.SingleQuotes next.next()
+    parser = new language.SingleQuotes next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     
@@ -221,7 +221,7 @@ describe "Test parsing classes", ->
 
   describe "Test double quotes", ->
     source = new Source '"foobar"a'
-    parser = new sp.DoubleQuotes next.next()
+    parser = new language.DoubleQuotes next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     
@@ -239,12 +239,12 @@ describe "Test parsing classes", ->
 
   describe "Test optional white", ->
     source = new Source 'f \v\t\r\na'
-    parser = new sp.OptionalWhite next.next(), "s"
+    parser = new language.OptionalWhite next.next(), "s"
     first = parser.parse dyNext, source, parseStack
-    skip = new sp.Constant next.next(), "f"
+    skip = new language.Constant next.next(), "f"
     skipped = skip.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    match = new sp.Constant next.next(), "a"
+    match = new language.Constant next.next(), "a"
     matched = match.parse dyNext, source, parseStack
         
     it "first should be complete", ->
@@ -267,13 +267,13 @@ describe "Test parsing classes", ->
 
   describe "Test required white", ->
     source = new Source ' f\nb'
-    parser = new sp.RequiredWhite  next.next(), 'n'
+    parser = new language.RequiredWhite  next.next(), 'n'
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    skip = new sp.Constant next.next(), "f"
+    skip = new language.Constant next.next(), "f"
     skipped = skip.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
-    skip2 = new sp.Constant next.next(), "b"
+    skip2 = new language.Constant next.next(), "b"
     skipped2 = skip2.parse dyNext, source, parseStack
     
     it "first should be complete", ->
@@ -296,10 +296,10 @@ describe "Test parsing classes", ->
 
   describe "Test symbol", ->
     source = new Source 'foobar_42a _FB22 98'
-    parser = new sp.Symbol next.next()
+    parser = new language.Symbol next.next()
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
-    skip = new sp.RequiredWhite next.next(), 's'
+    skip = new language.RequiredWhite next.next(), 's'
     skip1 = skip.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
     skip2 = skip.parse dyNext, source, parseStack
@@ -325,9 +325,9 @@ describe "Test parsing classes", ->
       
   describe "Test AndJoin", ->
     source = new Source "foobarbarfoofoobar"
-    foo = new sp.Constant next.next(), "foo"
-    bar = new sp.Constant next.next(), "bar"
-    parser = new sp.AndJoin next.next(), foo, bar
+    foo = new language.Constant next.next(), "foo"
+    bar = new language.Constant next.next(), "bar"
+    parser = new language.AndJoin next.next(), foo, bar
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     skip = bar.parse dyNext, source, parseStack
@@ -358,10 +358,10 @@ describe "Test parsing classes", ->
 
   describe "Test OrJoin", ->
     source = new Source "foobarafoo"
-    foo = new sp.Constant next.next(), "foo"
-    bar = new sp.Constant next.next(), "bar"
-    a = new sp.Constant next.next(), "a"
-    parser = new sp.OrJoin next.next(), foo, bar
+    foo = new language.Constant next.next(), "foo"
+    bar = new language.Constant next.next(), "bar"
+    a = new language.Constant next.next(), "a"
+    parser = new language.OrJoin next.next(), foo, bar
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     third = parser.parse dyNext, source, parseStack
@@ -394,9 +394,9 @@ describe "Test parsing classes", ->
 
   describe "Test Repeat", ->
     source = new Source "foofoobarfoo"
-    foo = new sp.Constant next.next(), "foo"
-    bar = new sp.Constant next.next(), "bar"
-    parser = new sp.Repeat next.next(), foo
+    foo = new language.Constant next.next(), "foo"
+    bar = new language.Constant next.next(), "bar"
+    parser = new language.Repeat next.next(), foo
     first = parser.parse dyNext, source, parseStack
     second = parser.parse dyNext, source, parseStack
     skip = bar.parse dyNext, source, parseStack
